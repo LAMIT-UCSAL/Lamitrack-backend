@@ -1,0 +1,73 @@
+@startuml pipeline
+title LamiTrack — pipeline diário de coleta e divulgação
+
+skinparam shadowing false
+skinparam defaultFontName Sans
+
+participant "Job diário\nagendado" as job
+participant "Fonte externa" as fonte
+participant "Normalização\ne geolocalização" as norm
+database "Banco de eventos" as db
+participant "Site e API" as site
+participant "Gateway WhatsApp" as gw
+actor "Grupo da comunidade" as grupo
+
+== 1. Coleta ==
+loop para cada fonte configurada
+  job -> fonte : busca a página
+  alt sucesso
+    fonte --> job : conteúdo
+  else fonte fora do ar ou mudou de layout
+    fonte --> job : falha
+    job -> job : registra no log e **segue para a próxima**
+    note right
+      Invariante: uma fonte quebrada
+      não pode derrubar a coleta inteira.
+      Sem isso, o dia inteiro se perde
+      porque o Sympla mudou uma classe CSS.
+    end note
+  end
+end
+
+== 2. Normalização ==
+job -> norm : campos crus
+norm -> norm : preenche o modelo Evento (tarefa 9)
+norm -> norm : descobre cidade, UF e coordenadas (tarefa 16)
+norm --> job : evento completo, ou descarte se for fora da Bahia
+
+== 3. Deduplicação ==
+loop para cada evento
+  job -> db : já existe? (título normalizado + data + cidade)
+  db --> job : novo ou duplicado
+end
+
+== 4. Persistência ==
+job -> db : grava apenas os novos
+db -> site : **passa a aparecer na vitrine imediatamente**
+
+note right of db
+  Diferença importante em relação ao bot antigo:
+  aqui gravar e divulgar são **dois** momentos.
+  O site mostra o evento assim que ele é gravado;
+  o WhatsApp é um segundo canal, com ritmo próprio.
+end note
+
+== 5. Divulgação ==
+alt nenhum evento novo
+  job -> job : encerra em silêncio (não posta "nada hoje")
+else há eventos novos
+  job -> gw : envia os novos, respeitando o limite diário (tarefa 32)
+  gw -> grupo : mensagem formatada com link para a página do evento
+  gw --> job : confirmação de envio
+
+  == 6. Marcação (só depois do envio confirmado) ==
+  job -> db : marca como divulgado
+
+  note right of job
+    Invariante da ordem 5→6: se falhar entre o envio
+    e a marcação, o pior caso é repetir a mensagem
+    amanhã — visível e inofensivo. A ordem inversa
+    perderia o evento em silêncio.
+  end note
+end
+@enduml

@@ -1,0 +1,72 @@
+@startuml topologia
+title LamiTrack — topologia da v1
+
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam defaultFontName Sans
+
+cloud "Sympla, Index Bahia,\nsites de hackathon" as sites
+cloud "Instagram, LinkedIn,\nTelegram" as social
+actor "Visitante do site" as visitante
+actor "Grupo da comunidade LAMIT" as grupo
+actor "Diretoria de eventos" as curadoria
+
+package "Repositório back-end" {
+  component "Scraper por fonte\n(tarefas 13 e 14)" as scraper
+  component "Back office de\nsubmissão manual\n(tarefa 17)" as backoffice
+  component "Normalização\n(modelo Evento, tarefa 9)" as normaliza
+  component "Geolocalização\n(tarefa 16)" as geo
+  component "Deduplicação\n(tarefa 15)" as dedup
+  component "API REST de eventos\n(tarefas 20 e 21)" as api
+  component "Bot de divulgação\n(tarefas 18, 31 e 32)" as bot
+  database "Banco de eventos\n(tarefa 19)" as db
+}
+
+package "Repositório front-end" {
+  component "Site React + TypeScript\n(GitHub Pages)" as site
+}
+
+component "Gateway WhatsApp\n** DECISÃO PENDENTE **" as gateway #FFD8D8
+
+scraper -up-> sites : raspagem automática
+curadoria -down-> backoffice : cadastro manual
+social -down-> curadoria : acompanhamento humano
+scraper -down-> normaliza
+backoffice -down-> normaliza
+normaliza -down-> geo
+geo -down-> dedup
+dedup -down-> db : só o que é novo
+db -down-> api
+api -down-> site : JSON
+site -down-> visitante
+db -right-> bot : eventos ainda não divulgados
+bot -down-> gateway
+gateway -down-> grupo
+
+note bottom of gateway
+  Tarefa 30. A API oficial da Meta (Cloud API)
+  **não envia mensagem para grupos** — só para
+  conversas 1:1 iniciadas pelo usuário.
+  Como o produto existe para postar no grupo da
+  comunidade, na prática sobra caminho não oficial
+  (WhatsApp Web, ex.: Evolution API / Baileys):
+  usar chip dedicado, porque há risco de banimento.
+end note
+
+note bottom of backoffice
+  Instagram **não** será raspado: risco de bloqueio alto
+  e a diretoria de eventos já acompanha os perfis.
+  Combinado no kick-off.
+end note
+
+note bottom of dedup
+  Chave de dedup **não pode ser só o link**: o mesmo
+  evento no Sympla e no site do organizador tem links
+  diferentes. Comparar título normalizado + data + cidade.
+end note
+
+note bottom of site
+  GitHub Pages é de graça porque o repositório é público.
+  Só o back-end depende da decisão de hospedagem (tarefa 33).
+end note
+@enduml
