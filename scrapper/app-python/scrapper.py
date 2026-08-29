@@ -16,6 +16,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import time
 
 client = httpx.AsyncClient()
 
@@ -70,75 +71,153 @@ def check_data_by_selenium():
 
     driver = webdriver.Chrome()
     wait = WebDriverWait(driver, 20)
-    driver.get("https://www.sympla.com.br/eventos?s=tech")
 
-    try:
-        cookie_button = WebDriverWait(driver, 5).until(
-            EC.element_to_be_clickable(
-                (
-                    By.XPATH,
-                    "//button[contains(., 'Aceitar') or contains(., 'Accept')]"
-                )
-            )
-        )
-        cookie_button.click()
-    except Exception as error:
-        print('ERROR: ', error)
-
-    elements = wait.until(
-        EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3.pn67h1f"))
+    driver.get(
+        "https://www.sympla.com.br/eventos?s=tech&dt=2026-08-23%2C2026-09-06"
     )
 
-    number_of_events = len(elements)
+    link_list = []
 
-    for i in range(number_of_events):
+    try:
+        while True:
 
-        try:
-            # elements need to be refreshed
-            # code below guarantees DOM refresh
+            # Get cards
             elements = wait.until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3.pn67h1f"))
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "a.sympla-card")
+                )
             )
 
-            element = elements[i]
-            print("CLICK: ", element.text)
+            # Remember current page
+            old_href = elements[0].get_attribute("href")
 
-            # Bring element into the viewport
-            link = element.find_element(
-                By.XPATH,
-                "./ancestor::a[1]"
-            )
+            # Collect links
+            for element in elements:
 
-            driver.execute_script(
-                "arguments[0].scrollIntoView({block: 'center'});",
-                link
-            )
+                href = element.get_attribute("href")
 
-            # Give the browser a moment to finish scrolling/rendering
+                if href and href not in link_list:
+                    link_list.append(href)
+
+            print(f"TOTAL LINKS: {len(link_list)}")
+
+            # Find next
+            try:
+
+                button_next_page = WebDriverWait(driver, 5).until(
+                    EC.element_to_be_clickable(
+                        (
+                            By.XPATH,
+                            "//button[.//div[contains(@class, '_2pl8g9g')]]"
+                        )
+                    )
+                )
+
+            except Exception as error:
+
+                print("No more pages.")
+                break
+
+            button_next_page = wait.until(
+    EC.presence_of_element_located(
+        (
+            By.XPATH,
+            "//button[.//div[contains(@class, '_2pl8g9g')]]"
+        )
+    )
+)
+
+            driver.execute_script("""
+                arguments[0].scrollIntoView({
+                    behavior: 'instant',
+                    block: 'center',
+                    inline: 'center'
+                });
+            """, button_next_page)
+
+            # Check position AFTER scrolling
+            rect = driver.execute_script("""
+    const r = arguments[0].getBoundingClientRect();
+
+    return {
+        top: r.top,
+        bottom: r.bottom,
+        left: r.left,
+        right: r.right,
+        viewportHeight: window.innerHeight
+    };
+""", button_next_page)
+
+            print("BUTTON AFTER SCROLL:", rect)
+
+            button_next_page.click()
+
+            # Wait for card content to change
             wait.until(
-                EC.visibility_of(element)
+                lambda driver:
+                    driver.find_element(
+                        By.CSS_SELECTOR,
+                        "a.sympla-card"
+                    ).get_attribute("href") != old_href
             )
+    except Exception as error:
 
-            old_url = driver.current_url
-            link.click()
+        print("SCRAPER ERROR:", error)
 
-            wait.until(EC.url_changes(old_url))
+    finally:
 
-            print("NEW URL: ", driver.current_url)
-            driver.back()
-            elements = wait.until(
-                EC.presence_of_all_elements_located((By.CSS_SELECTOR, "h3.pn67h1f"))
+        driver.quit()
+
+    return link_list
+
+def check_button_click():
+
+    driver = webdriver.Chrome()
+    wait = WebDriverWait(driver, 20)
+
+    driver.get(
+        "https://www.sympla.com.br/eventos?s=tech&dt=2026-08-23%2C2026-09-06"
+    )
+
+    count = 1
+
+    elements = wait.until(
+                EC.presence_of_all_elements_located(
+                    (By.CSS_SELECTOR, "a.sympla-card")
+                )
             )
-        except Exception as error:
-            print("ERROR: ", error)
+    
+    time.sleep(5)
 
-    print(len(elements))
+    button_number = wait.until(
+                    EC.element_to_be_clickable(
+                        (
+                            By.XPATH,
+                            f"//li//a[text()='{count+1}']"
+                        )
+                    )
+                )
+
+    button_number.click()  
+
+    # button_next_page = wait.until(
+    #                 EC.element_to_be_clickable(
+    #                     (
+    #                         By.XPATH,
+    #                         "//button[.//div[contains(@class, '_2pl8g9g')]]"
+    #                     )
+    #                 )
+    #             )
+    
+    # button_next_page.click()
 
 
 if __name__ == "__main__":
     print("Start scraping...")
 
-    check_data_by_selenium()
+    check_button_click()
+
+    # link_list = check_data_by_selenium()
 
     # html = asyncio.run(get_data())
     # print(html)
