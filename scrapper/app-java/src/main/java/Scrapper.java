@@ -6,9 +6,13 @@ import java.net.http.HttpResponse;
 
 // install maven
 // $ choco install maven ( for windows users )
-// go to scrapper/
+// go to scrapper/app-java
 // run script with
 // $ mvn compile
+// $ java -cp target/classes Scrapper
+
+// to run directly
+// mvn compile exec:java
 
 public class Scrapper {
 
