@@ -1,5 +1,6 @@
 package br.com.lamit.lamitrack.event;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -16,4 +17,10 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
      * na Sympla e é único por evento (constraint {@code uq_events_registration_url}).
      */
     Optional<Event> findByRegistrationUrl(String registrationUrl);
+
+    /**
+     * Eventos ainda não enviados para o WhatsApp (issue #57):
+     * {@code whatsappSentAt IS NULL} = "evento novo".
+     */
+    List<Event> findByWhatsappSentAtIsNull();
 }
