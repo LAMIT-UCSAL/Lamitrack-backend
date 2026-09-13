@@ -27,8 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
  * linha existente em vez de criar uma duplicada (upsert por
  * {@code registrationUrl}).
  *
- * <p>Disparo manual por enquanto (ver {@link PipelineConfiguration}); o
- * agendamento semanal é a issue #45.
+ * <p>Disparo manual ao subir e agendamento semanal automático (issue #45,
+ * ADR 0003) via {@link PipelineConfiguration} /
+ * {@link SymplaPipelineScheduler}.
  */
 @Service
 public class SymplaPipeline {
