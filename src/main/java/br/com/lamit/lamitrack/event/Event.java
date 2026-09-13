@@ -58,6 +58,13 @@ public class Event {
     @Column(name = "banner_url")
     private String bannerUrl;
 
+    /**
+     * Quando o evento foi enviado para o grupo do WhatsApp (issue #57).
+     * {@code null} = evento ainda não enviado ("evento novo").
+     */
+    @Column(name = "whatsapp_sent_at")
+    private LocalDateTime whatsappSentAt;
+
     @ElementCollection
     @CollectionTable(name = "event_tags", joinColumns = @JoinColumn(name = "event_id"))
     @Column(name = "tag")
@@ -183,6 +190,14 @@ public class Event {
 
     public void setBannerUrl(String bannerUrl) {
         this.bannerUrl = bannerUrl;
+    }
+
+    public LocalDateTime getWhatsappSentAt() {
+        return whatsappSentAt;
+    }
+
+    public void setWhatsappSentAt(LocalDateTime whatsappSentAt) {
+        this.whatsappSentAt = whatsappSentAt;
     }
 
     public Set<String> getTags() {
