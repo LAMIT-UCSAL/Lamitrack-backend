@@ -98,7 +98,7 @@ class EvolutionApiClientTest {
     @Test
     void usaInstanciaConfiguradaNaUrl() throws Exception {
         EvolutionApiClient client = new EvolutionApiClient(new ObjectMapper(),
-                new WhatsappProperties(true, BASE_URL + porta, API_KEY, GROUP_ID, "lamit"));
+                new WhatsappProperties(true, BASE_URL + porta, API_KEY, GROUP_ID, "lamit", null, null));
 
         client.enviarTextoParaGrupo("mensagem");
 
@@ -117,6 +117,6 @@ class EvolutionApiClientTest {
 
     private static EvolutionApiClient clientComBaseUrl(String baseUrl) {
         return new EvolutionApiClient(new ObjectMapper(),
-                new WhatsappProperties(true, baseUrl, API_KEY, GROUP_ID, null));
+                new WhatsappProperties(true, baseUrl, API_KEY, GROUP_ID, null, null, null));
     }
 }
