@@ -7,18 +7,28 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Configuração do pipeline da Sympla (issue #44).
+ * Configuração do pipeline da Sympla (issues #44 e #45).
  *
- * <p>Disparo manual por enquanto: com {@code lamitrack.pipeline.enabled=true}
- * e {@code lamitrack.pipeline.url=<url>} o app roda o pipeline uma vez ao
- * subir (ex. {@code mvn spring-boot:run -Dspring-boot.run.arguments=...} ou
- * {@code java -jar ... --lamitrack.pipeline.enabled=true
- * --lamitrack.pipeline.url=https://www.sympla.com.br/evento/...}). O
- * agendamento semanal automático é a issue #45.
+ * <p>Com {@code lamitrack.pipeline.enabled=true} e
+ * {@code lamitrack.pipeline.url=<url>} o app:
+ * <ul>
+ *   <li>roda o pipeline uma vez ao subir (disparo manual, #44 — ex.
+ *       {@code java -jar ... --lamitrack.pipeline.enabled=true
+ *       --lamitrack.pipeline.url=https://www.sympla.com.br/evento/...});</li>
+ *   <li>roda o pipeline automaticamente a cada ciclo do cron
+ *       {@code lamitrack.pipeline.cron} (default: domingo às 03:00, uma vez
+ *       por semana — agendamento semanal, #45 / ADR 0003).</li>
+ * </ul>
+ *
+ * <p>Os dois modos compartilham a mesma flag {@code enabled} e a mesma URL;
+ * não há conflito porque o pipeline é idempotente (upsert por
+ * {@code registrationUrl}).
  */
 @Configuration
+@EnableScheduling
 @EnableConfigurationProperties(PipelineProperties.class)
 public class PipelineConfiguration {
 
@@ -42,5 +52,18 @@ public class PipelineConfiguration {
                     ? "Pipeline: evento persistido a partir de " + url
                     : "Pipeline: nenhum evento persistido a partir de " + url);
         };
+    }
+
+    /**
+     * Agendamento semanal automático (issue #45): só existe com
+     * {@code lamitrack.pipeline.enabled=true}, a mesma flag do disparo manual
+     * da #44. A expressão cron vem de {@code lamitrack.pipeline.cron}
+     * (default: {@link PipelineProperties#CRON_DEFAULT}).
+     */
+    @Bean
+    @ConditionalOnProperty(name = "lamitrack.pipeline.enabled", havingValue = "true")
+    public SymplaPipelineScheduler symplaPipelineScheduler(SymplaPipeline pipeline,
+                                                           PipelineProperties properties) {
+        return new SymplaPipelineScheduler(pipeline, properties);
     }
 }
