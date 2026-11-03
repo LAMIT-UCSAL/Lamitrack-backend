@@ -9,4 +9,4 @@ Um componente que busca eventos em uma fonte externa e devolve dados no formato 
 _Avoid_: Scrapper (grafia usada hoje nas pastas `scrapper/app-java`, `scrapper/app-python` dos branches POC — errada em inglês, vale corrigir para `scraper/` quando esse código for promovido para a `main`)
 
 **Fonte**:
-Um site, RSS ou outra origem externa de onde um Scraper extrai eventos. Sympla é a primeira (#13); a segunda (#14) ainda não foi escolhida.
+Um site, RSS ou outra origem externa de onde um Scraper extrai eventos. Sympla é a primeira (#13); a segunda (#14) ainda não foi escolhida. Catálogo das fontes candidatas: `docs/fontes.md`.
