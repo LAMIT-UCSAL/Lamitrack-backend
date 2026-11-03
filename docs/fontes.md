@@ -8,16 +8,16 @@ Levantamento feito em **2026-11-03**. Sites mudam: antes de implementar um scrap
 
 ## 1. Critérios do que entra no LamiTrack (decisão do time)
 
-O scraper traz tudo o que a fonte mostra. Os "principais eventos" dependem destes critérios. Os marcados como **Decidido** valem; os demais ainda são proposta.
+O scraper traz tudo o que a fonte mostra; estes critérios definem o que entra. Todos decididos em 2026-11-03.
 
 | Critério | Pergunta | Situação |
 |---|---|---|
 | Região e tema | Só Salvador? Bahia? Online? | **Decidido (2026-11-03):** presencial na Bahia **e** online de qualquer lugar, desde que dentro do contexto de **inovação, tecnologia e empreendedorismo** |
-| Tipo | Só as 5 categorias (Hackathon, Ideathon, Maratona, Edital, Eventos de Inovação)? | Proposta: sim, só as 5 |
+| Tipo | Só as 5 categorias (Hackathon, Ideathon, Maratona, Edital, Eventos de Inovação)? | **Decidido (2026-11-03):** só as 5, por enquanto. Evento que não se encaixa em nenhuma fica de fora |
 | Público | Estudantes, startups, pesquisadores? | Estudantes e comunidade tech |
 | Preço | Gratuitos e pagos? | Os dois (a API ainda não guarda preço) |
-| Prazo | Só eventos futuros ou com inscrição aberta? | Proposta: só com data futura |
-| Curadoria | Tudo o que o scraper achar entra, ou alguém aprova? | Proposta: aprovação humana antes de publicar (#17) |
+| Prazo | Só eventos futuros ou com inscrição aberta? | **Decidido (2026-11-03):** só eventos futuros (para editais, prazo de inscrição futuro) |
+| Curadoria | Tudo o que o scraper achar entra, ou alguém aprova? | **Decidido (2026-11-03):** sem aprovação humana. O que passar pelos critérios acima entra direto; por isso o scraper precisa classificar bem a categoria |
 | Data de um edital | `startsAt` é a publicação ou o prazo? | **Decidido (2026-11-03):** o **prazo de inscrição** (encerramento) |
 
 > **Importante para o front:** a categoria do evento é lida das `tags`. Para o card mostrar a categoria, o scraper precisa gravar **uma tag com o nome exato** de uma das 5 categorias: `Hackathon`, `Ideathon`, `Maratona`, `Edital` ou `Eventos de Inovação`.
@@ -76,7 +76,7 @@ Legenda de acesso: **API** = dados em JSON por endereço público · **HTML** = 
 - **URL:** https://parquetecnologico-ba.org.br · agenda: https://parquetecnologico-ba.org.br/calendario-de-eventos/
 - **robots.txt:** sem restrições.
 - **Como extrair:** a agenda está no HTML (data, título, descrição curta). Os itens **não têm link individual** e quase nunca têm local. Há também a página "Cadastre seu evento", que pode virar parceria (eles mandam os eventos para o LamiTrack).
-- **Conteúdo:** mistura eventos de inovação (Darwin on the Road, Open meetup, Masterclass da Validação) com eventos internos (corrida, festa junina). Precisa de curadoria.
+- **Conteúdo:** mistura eventos de inovação (Darwin on the Road, Open meetup, Masterclass da Validação) com eventos internos (corrida, festa junina). Como não há aprovação humana, o filtro por categoria precisa descartar os internos.
 - **Observação:** o rodapé do site tem um link com cara de spam injetado (`.../vitejte-v-novem-svete-zabavy-casino-point-cz/`). Não seguir links do rodapé no scraper.
 
 ### Devpost
@@ -157,17 +157,17 @@ Deduplicação (#15): a mesma competição pode estar na Sympla e no site do org
 
 ## 5. Recomendações
 
-1. **Decidir os critérios da seção 1** antes de escrever novo scraper.
+1. **Critérios da seção 1 decididos.** Sem aprovação humana, cada scraper precisa classificar a categoria (as 5) e descartar o que não se encaixa ou já passou.
 2. **Segunda fonte (#14): FAPESB**, pela API do WordPress. É a de menor risco técnico e cobre a categoria Edital, que a Sympla não cobre. O ponto mais trabalhoso é extrair o prazo de inscrição do texto.
 3. **Terceira fonte: Devpost**, pela API, para hackathons online (permitidos pelo critério de região).
 4. **Sympla: implementar a descoberta** (busca por cidade e palavra-chave → lista de URLs) para o pipeline existente processar. Antes, **ler os termos de uso** (pendente).
-5. **Cadastro manual (#17)** para Instagram, órgãos públicos, Index Bahia e eventos pontuais. É o que garante os "principais eventos" mesmo quando nenhuma fonte automática os tem.
+5. **Cadastro manual (#17)** para Instagram, órgãos públicos, Index Bahia e eventos pontuais (é entrada de dados pela equipe, não aprovação). É o que garante os "principais eventos" mesmo quando nenhuma fonte automática os tem.
 
 ## 6. Pendências
 
 - [ ] Ler os termos de uso da Sympla (bloqueiam leitura automática).
 - [x] Primeiro perfil: @hackathonbrasil_oficial. Ampliar a lista com o time.
-- [ ] Decidir os critérios ainda em proposta (tipo, prazo, curadoria).
+- [x] Decidir tipo (só as 5), prazo (só futuros) e curadoria (sem aprovação humana).
 - [ ] Conferir Doity, SECTI, Sebrae BA, SENAI CIMATEC e páginas de eventos das universidades.
 - [x] Decidir `startsAt` para editais → prazo de inscrição.
 - [x] Decidir região → Bahia presencial + online, no contexto de inovação, tecnologia e empreendedorismo.
